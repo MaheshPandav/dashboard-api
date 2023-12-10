@@ -1,19 +1,22 @@
-// index.js
-const express = require('express')
+require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
+require("./config/db");
+const app = express();
+const port = 8080 || process.env.PORT;
+const routes = require("./src/routes");
+const cors = require('cors');
 
-const app = express()
-const PORT = 4000
+const jsonParser = bodyParser.json();
+app.use(cors());
 
-app.listen(process.env.PORT || PORT, () => {
-  console.log(`API listening on PORT ${PORT} `)
-})
+app.use(jsonParser);
+app.use("/api/v1", routes);
 
-app.get('/', (req, res) => {
-  res.send('Hey this is my API running 🥳')
-})
+app.get("/", () => {
+  console.log("demo app");
+});
 
-app.get('/about', (req, res) => {
-  res.send('This is my about route..... ')
-})
-
-module.exports = app
+app.listen(port, () => {
+  console.log(`app is running on ${port}`);
+});
