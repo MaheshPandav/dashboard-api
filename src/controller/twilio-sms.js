@@ -24,8 +24,8 @@ const AllUser = mongoose.model("AllUser", {
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
 
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-const sendOTP = async (req, res, next) => {
-  const { phoneNumber } = req.body;
+const sendOTP = async (request, response, next) => {
+  const { phoneNumber } = request.body;
   const verificationCode = Math.floor(
     100000 + Math.random() * 900000
   ).toString();
@@ -40,36 +40,36 @@ const sendOTP = async (req, res, next) => {
       to: phoneNumber,
     });
 
-    res
+    response
       .status(200)
       .send(
         "User registered successfully. Check your phone for the verification code."
       );
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    response.status(500).send("Internal Server Error");
   }
 };
 
-const verifyOTP = async (req, res, next) => {
-  const { phoneNumber, verificationCode } = req.body;
+const verifyOTP = async (request, response, next) => {
+  const { phoneNumber, verificationCode } = request.body;
   try {
     const user = await User.findOne({ phoneNumber, verificationCode });
     if (!user) {
-      return res.status(400).send("Invalid verification code.");
+      return response.status(400).send("Invalid verification code.");
     }
     const newUser = new AllUser({
       phoneNumber: user.phoneNumber,
     });
     await newUser.save();
-    res
+    response
       .status(200)
       .send(
         "Phone number verified successfully. User saved in allUser collection."
       );
   } catch (error) {
     console.error(error);
-    res.status(500).send("Internal Server Error");
+    response.status(500).send("Internal Server Error");
   }
 };
 
