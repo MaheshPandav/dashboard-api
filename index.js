@@ -8,7 +8,13 @@ const routes = require("./src/routes");
 const cors = require('cors');
 
 const jsonParser = bodyParser.json();
-app.use(cors());
+const corsConfig = {
+  origin: '',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
+}
+app.use(cors(corsConfig))
+app.options("", cors(corsConfig))
 
 app.use(jsonParser);
 app.use("/api/v1", routes);
