@@ -5,7 +5,7 @@ require("../config/db");
 const app = express();
 const port = 8080 || process.env.PORT;
 const routes = require("../src/routes");
-const cors = require('cors');
+const cors = require("cors");
 
 const jsonParser = bodyParser.json();
 app.use(cors());
@@ -13,7 +13,7 @@ app.use(cors());
 app.use(jsonParser);
 app.use("/api/v1", routes);
 
-app.get("/", (req,res) => res.status(200).json({message: 'Hello world'}));
+app.get("/", (req, res) => res.status(200).json({ message: "Hello world" }));
 
 app.listen(port, () => {
   console.log(`app is running on ${port}`);

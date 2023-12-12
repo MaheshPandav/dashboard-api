@@ -1,9 +1,9 @@
 const express = require("express");
-const { sendOTP, verifyOTP } = require("../controller/twilio-sms");
+const { sendOtp, verifyOtp } = require("../controller/twilio-sms");
 const routes = express.Router();
 
-routes.post("/send-otp", sendOTP);
-routes.post("/verify-otp", verifyOTP);
+routes.post("/sendOtp", sendOtp);
+routes.post("/verifyOtp", verifyOtp);
+// routes.get("/allUsers", allUsers);
 
-
-module.exports = routes
+module.exports = routes;

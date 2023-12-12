@@ -1,79 +1,55 @@
 const twilio = require("twilio");
-
-const mongoose = require("mongoose");
-const url = process.env.MONGO_URL;
-
-mongoose
-  .connect(url)
-  .then(() => {
-    console.log("Mongo Db connected");
-  })
-  .catch((error) => {
-    console.log("error while connecting mongodb", error);
-  });
-
-const User = mongoose.model("User", {
-  phoneNumber: String,
-  verificationCode: String,
-});
-
-const AllUser = mongoose.model("AllUser", {
-  phoneNumber: String,
-});
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
 
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-const sendOTP = async (request, response, next) => {
-  const { phoneNumber } = request.body;
-  const verificationCode = Math.floor(
-    100000 + Math.random() * 900000
-  ).toString();
 
+function generateToken(user) {
+  return jwt.sign(
+    { phoneNumber: user.phoneNumber },
+    process.env.JWT_SECRETE_KEY,
+    { expiresIn: "1h" }
+  );
+}
+const sendOtp = async (req, res, next) => {
+  const { phoneNumber } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   try {
-    const user = new User({ phoneNumber, verificationCode });
+    const user = new User({ phoneNumber, otp });
     await user.save();
-
     await client.messages.create({
-      body: `Your verification code is: ${verificationCode}`,
+      body: `Your OTP is: ${otp}`,
       from: "+12018347166",
       to: phoneNumber,
     });
-
-    response
-      .status(200)
-      .send(
-        "User registered successfully. Check your phone for the verification code."
-      );
+    res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error(error);
-    response.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-const verifyOTP = async (request, response, next) => {
-  const { phoneNumber, verificationCode } = request.body;
+const verifyOtp = async (req, res, next) => {
+  const { phoneNumber, otp } = req.body;
   try {
-    const user = await User.findOne({ phoneNumber, verificationCode });
-    if (!user) {
-      return response.status(400).send("Invalid verification code.");
+    const user = await User.findOne({ phoneNumber, otp });
+    if (user) {
+      const token = generateToken(user);
+      await User.findOneAndUpdate({ phoneNumber }, { $unset: { otp: 1 } });
+
+      res.status(200).json({ token });
+    } else {
+      res.status(401).json({ error: "Invalid OTP" });
     }
-    const newUser = new AllUser({
-      phoneNumber: user.phoneNumber,
-    });
-    await newUser.save();
-    response
-      .status(200)
-      .send(
-        "Phone number verified successfully. User saved in allUser collection."
-      );
   } catch (error) {
     console.error(error);
-    response.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 module.exports = {
-  sendOTP,
-  verifyOTP,
+  sendOtp,
+  verifyOtp,
 };
