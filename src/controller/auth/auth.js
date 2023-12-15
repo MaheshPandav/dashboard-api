@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {
   User,
@@ -27,8 +27,8 @@ const register = async (req, res, next) => {
     return res.status(400).send("Password and confirmPassword are not match");
   } else {
     try {
-      const salt = await bcrypt.genSalt(10);
-      const finalPassword = await bcrypt.hash(password, salt);
+      const salt = await bcryptjs.genSalt(10);
+      const finalPassword = await bcryptjs.hash(password, salt);
       const user = new User({
         firstName: firstName,
         lastName: lastName,
