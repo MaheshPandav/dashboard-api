@@ -56,7 +56,7 @@ const verifyOtp = async (req, res, next) => {
   }
 };
 
-const getAllUsers = async (req, res, next) => {
+const getUser = async (req, res, next) => {
   try {
     const users = await User.find();
     res.status(200).json(users);
@@ -69,5 +69,5 @@ const getAllUsers = async (req, res, next) => {
 module.exports = {
   sendOtp,
   verifyOtp,
-  getAllUsers,
+  getUser,
 };
