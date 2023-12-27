@@ -44,7 +44,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  created_at : String
+  firstLogin: {
+    type: Boolean,
+    default: true,
+  },
+  created_at : String,
+  wallet: {
+    type: Number,
+    default: 0,
+  },
 });
 
 function validateUser(user) {
@@ -56,6 +64,8 @@ function validateUser(user) {
     confirmPassword: Joi.string().min(8).max(100).required(),
     mobileNumber: Joi.string().min(10).max(12).required(),
     profileImage: Joi.string().allow(null),
+    firstLogin: Joi.boolean(),
+    wallet: Joi.number(),
   });
   return schema.validate(user);
 }
@@ -73,6 +83,8 @@ function validateEditUser(user) {
     firstName: Joi.string().min(3).max(100),
     lastName: Joi.string().min(3).max(100),
     mobileNumber: Joi.string().min(10).max(12),
+    firstLogin: Joi.boolean(),
+    wallet: Joi.number(),
   });
   return schema.validate(user);
 }

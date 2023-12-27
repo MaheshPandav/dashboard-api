@@ -11,19 +11,21 @@ const { Event } = require("../models/recentEvent");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { message } = require("../utils/message");
+const { Wallet } = require("../models/wallet");
 
 cloudinary.config({
-  cloud_name: 'dnmmylkit',
-  api_key: '694744911512192',
-  api_secret: 'M3EZ1rJy9VEOm3KlsmM-v1v0gwo'
+  cloud_name: "dnmmylkit",
+  api_key: "694744911512192",
+  api_secret: "M3EZ1rJy9VEOm3KlsmM-v1v0gwo",
 });
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'user-profiles',
-    allowed_formats: ['jpg', 'jpeg', 'png'],
-  }
+    folder: "user-profiles",
+    allowed_formats: ["jpg", "jpeg", "png"],
+  },
 });
 
 const multerUpload = multer({ storage: storage });
@@ -43,9 +45,9 @@ const register = async (req, res, next) => {
   }
   let user = await User.findOne({ email: email });
   if (user) {
-    return res.status(400).send("User already exists. Please sign in");
+    return res.status(400).send(message.USER_EXIST);
   } else if (password !== confirmPassword) {
-    return res.status(400).send("Password and confirmPassword are not match");
+    return res.status(400).send(message.PASSWORD_UN_MATCH);
   } else {
     try {
       let profileImageUrl = null;
@@ -73,9 +75,17 @@ const register = async (req, res, next) => {
         ts: Math.floor(new Date().getTime() / 1000),
       });
       await Activity.save();
+      let wallet = await Wallet.findOne({ user: user._id });
+      if (!wallet) {
+        wallet = new Wallet({
+          user: user._id,
+          balance: 0,
+        });
+        await wallet.save();
+      }
       return res
         .status(201)
-        .json({ message: "User successfully register!", user: user });
+        .json({ message: message.USER_REGISTER_MESSAGE, user: user });
     } catch (err) {
       return res.status(400).json({ message: err.message });
     }
@@ -182,6 +192,35 @@ const deleteUserById = async (req, res, next) => {
   }
 };
 
+const verifyToken = (req, res, next) => {
+  const token = req.header("Authorization");
+  if (!token) {
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRETE_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: error });
+  }
+};
+
+const getUserDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -189,5 +228,7 @@ module.exports = {
   getUserById,
   updateUserById,
   deleteUserById,
-  multerUpload
+  multerUpload,
+  verifyToken,
+  getUserDetails,
 };
